@@ -20,20 +20,15 @@ router.get('/login', function(req, res, next) {
 
 router.post('/register', async function(req, res, next) {
   var name = req.body.name,
-      email = req.body.email,
-      username = req.body.username,
-      password = req.body.password,
-      password2 = req.body.password2;
+    email = req.body.email,
+    username = req.body.username,
+    password = req.body.password,
+    password2 = req.body.password2;
 
-  // check for image fields
+  // Check for image fields
   if (req.files && req.files.profileimage) {
     console.log('Uploading File...');
-    var profileImageName = req.files.profileimage.originalname;
     var profileImageServer = req.files.profileimage.name;
-    var profileImageMime = req.files.profileimage.mimetype;
-    var profileImagePath = req.files.profileimage.path;
-    var profileImageExt = req.files.profileimage.extension;
-    var profileImageSize = req.files.profileimage.size;
   } else {
     var profileImageServer = "noimage.png";
   }
@@ -46,7 +41,7 @@ router.post('/register', async function(req, res, next) {
   req.checkBody('password', 'Password Field is required').notEmpty();
   req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
 
-  // errors
+  // Errors
   var errors = req.validationErrors();
 
   if (errors) {
@@ -68,13 +63,14 @@ router.post('/register', async function(req, res, next) {
     });
 
     try {
-      await User.createUser(newUser);
+      const user = await User.createUser(newUser); // Use async/await for creating user
+      console.log(user);
       req.flash('success', "You are now registered and may log in");
       res.location('/');
       res.redirect('/');
     } catch (err) {
-      console.error('Error creating user:', err);
-      req.flash('error', 'Something went wrong. Please try again.');
+      console.error(err);
+      req.flash('error', 'Registration failed. Please try again.');
       res.redirect('/users/register');
     }
   }
@@ -84,10 +80,13 @@ passport.serializeUser(function(user, done) {
   done(null, user.id);
 });
 
-passport.deserializeUser(function(id, done) {
-  User.getUserById(id, function(err, user) {
-    done(err, user);
-  });
+passport.deserializeUser(async function(id, done) {
+  try {
+    const user = await User.getUserById(id);
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
 });
 
 passport.use(new LocalStrategy(
@@ -107,7 +106,6 @@ passport.use(new LocalStrategy(
         return done(null, false, { message: "Invalid Password" });
       }
     } catch (err) {
-      console.error('Error in LocalStrategy:', err);
       return done(err);
     }
   }
