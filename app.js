@@ -9,7 +9,8 @@ var LocalStrategy = require('passport-local').Strategy;
 var bodyParser = require('body-parser');
 var multer = require('multer');
 var flash = require('connect-flash');
-var expressValidator = require('express-validator')
+var { body, validationResult } = require('express-validator'); // Updated import for express-validator
+var cors = require('cors'); // Added CORS middleware
 
 var mongo = require('mongodb');
 var mongoose = require('mongoose');
@@ -20,13 +21,15 @@ var users = require('./routes/users');
 
 var app = express();
 
+// Enable CORS for all routes (optional, customize as needed)
+app.use(cors());
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 // FileUpload handle
-app.use( multer({dest: './uploads'}).single('profileimage'));
-//var upload = multer({ dest: './uploads' })
+app.use(multer({ dest: './uploads' }).single('profileimage'));
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -34,50 +37,31 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-// Handle session
+// Handle session (use a secure store in production)
 app.use(session({
-	secret: 'sonic',
-	saveUninitialized: true,
-	resave: true
+  secret: process.env.SESSION_SECRET || 'sonic', // Use environment variable for secret in production
+  saveUninitialized: true,
+  resave: true
 }));
 
 // Passport
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Validator
-app.use(expressValidator({
-	errorFormatter: function(param, msg, value){
-		var namespace = param.split('.'),
-		root = namespace.shift(),
-		formParam = root;
-		
-		while(namespace.length){
-			formParam += '[' + namespace.shift() + ']';
-		}
-		
-		return{
-			param: formParam,
-			msg: msg,
-			value: value
-		}
-	}
-}));
-
-
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(flash());
-app.use(function(req, res, next){
-	res.locals.messages = require('express-messages')(req,res);
-	next();
+app.use(function(req, res, next) {
+  res.locals.messages = require('express-messages')(req, res);
+  next();
 });
 
-app.get('*', function(req, res, next){
-	res.locals.user = req.user || null;
-	next();
+app.get('*', function(req, res, next) {
+  res.locals.user = req.user || null;
+  next();
 });
+
 app.use('/', routes);
 app.use('/users', users);
 
@@ -112,5 +96,10 @@ app.use(function(err, req, res, next) {
   });
 });
 
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 
 module.exports = app;
