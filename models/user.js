@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt');
-mongoose.connect('mongodb://localhost/nodeauth');
+mongoose.connect('mongodb+srv://dbclusteruser:dbcluster@dbcluster.4pxvp.mongodb.net/mydatabase?retryWrites=true&w=majority');
 var db = mongoose.connection;
 
 // User Schema
