@@ -35,7 +35,6 @@ jobs:
             
             # Restart the application
             echo 'Starting the Node.js application...'
-            nohup node /home/ubuntu/new/nodejsapp/app.js &
             
             # Run the Ansible playbook
             cd /home/ubuntu && ansible-playbook -i hosts.ini nodeapp.yml
