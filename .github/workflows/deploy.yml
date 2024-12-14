@@ -20,15 +20,22 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  
 
-      # Step 3: Run Ansible playbook on EC2 (without heredoc)
-      - name: Run Ansible playbook on EC2
+      # Step 3: Run commands on EC2 to handle the app
+      - name: Run deployment commands on EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@54.226.131.47 "
-            # Check if the app is already running on port 3000 and kill it
+            # Check if the app is already running on port 3000 and kill it if necessary
             if lsof -i :3000; then
               echo 'Application is already running on port 3000, stopping it...'
               pid=\$(lsof -t -i :3000)
               kill -9 \${pid}
+              # Wait a bit to ensure the process is killed
+              sleep 5
+            fi
+            # Check again if the process is killed
+            if lsof -i :3000; then
+              echo 'Failed to stop the existing process on port 3000'
+              exit 1
             fi
             # Now, run the Node.js app
             nohup node /home/ubuntu/new/nodejsapp/app.js &"
