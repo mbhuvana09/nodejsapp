@@ -3,27 +3,24 @@ name: Deploy Node.js App to EC2
 on:
   push:
     branches:
-      - main  
+      - main  # Trigger the workflow when changes are pushed to the 'main' branch
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest  
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner for GitHub Actions
 
     steps:
-      
+      # Step 1: Checkout the code from your GitHub repository
       - name: Checkout code
         uses: actions/checkout@v2
 
-      
+      # Step 2: Set up SSH to access the EC2 instance
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.5.3
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  # Use the SSH private key stored in GitHub secrets
 
-      
+      # Step 3: Run Ansible playbook on EC2 (without heredoc)
       - name: Run Ansible playbook on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@54.226.131.47> << 'EOF'
-            cd /home/ubuntu
-            ansible-playbook -i hosts.ini nodeapp.yml  
-          EOF
+          ssh -o StrictHostKeyChecking=no ubuntu@54.226.131.47 "cd /home/ubuntu && ansible-playbook -i hosts.ini nodeapp.yml"
