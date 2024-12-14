@@ -1,34 +1,18 @@
-name: Deploy Node.js App to EC2
+---
+- name: Deploy Node.js App to EC2
+  hosts: all
+  become: yes
+  tasks:
 
-on:
-  push:
-    branches:
-      - main  
+    - name: Check if the Node.js application is running
+      command: lsof -i :3000
+      register: app_running
+      ignore_errors: true
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest  
-    steps:
-      # Step 1: Checkout the code from your GitHub repository
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # Step 2: Set up SSH to access the EC2 instance
-      - name: Set up SSH key
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  
-
-      # Step 3: Run Ansible playbook on EC2 (without heredoc)
-      - name: Run Ansible playbook on EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@54.226.131.47 "
-            # Check if Node.js is already running on port 3000
-            if ! lsof -i :3000; then
-              echo 'Application is not running. Starting the application...';
-              nohup node /home/ubuntu/new/nodejsapp/app.js &
-            else
-              echo 'Application is already running on port 3000';
-            fi
-            cd /home/ubuntu && ansible-playbook -i hosts.ini nodeapp.yml
-          "
+    - name: Start Node.js app if not running
+      shell: nohup node /home/ubuntu/new/nodejsapp/app.js &
+      when: app_running.rc != 0
+      ignore_errors: true
+      async: 0
+      poll: 0
+      become: yes
