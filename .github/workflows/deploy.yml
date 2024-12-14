@@ -23,19 +23,7 @@ jobs:
       - name: Run deployment commands on EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@54.226.131.47 "
-            # Check if Node.js is already running on port 3000
-            if lsof -i :3000; then
-              echo 'Application is already running on port 3000. Stopping it...';
-              # Kill the process occupying port 3000
-              pid=$(lsof -t -i :3000)
-              kill -9 $pid;
-            else
-              echo 'Application is not running on port 3000';
-            fi
-            
-            # Restart the application
-            echo 'Starting the Node.js application...'
-            
-            # Run the Ansible playbook
+            # Run the Ansible playbook to manage the Node.js application
+            echo 'Running Ansible playbook to deploy the Node.js application...'
             cd /home/ubuntu && ansible-playbook -i hosts.ini nodeapp.yml
           "
