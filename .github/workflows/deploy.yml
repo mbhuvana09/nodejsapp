@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main  
+
 jobs:
   deploy:
     runs-on: ubuntu-latest  
@@ -21,4 +22,13 @@ jobs:
       # Step 3: Run Ansible playbook on EC2 (without heredoc)
       - name: Run Ansible playbook on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@54.226.131.47 "cd /home/ubuntu && ansible-playbook -i hosts.ini nodeapp.yml"
+          ssh -o StrictHostKeyChecking=no ubuntu@54.226.131.47 "
+            # Check if Node.js is already running on port 3000
+            if ! lsof -i :3000; then
+              echo 'Application is not running. Starting the application...';
+              nohup node /home/ubuntu/new/nodejsapp/app.js &
+            else
+              echo 'Application is already running on port 3000';
+            fi
+            cd /home/ubuntu && ansible-playbook -i hosts.ini nodeapp.yml
+          "
