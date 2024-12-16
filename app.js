@@ -23,6 +23,7 @@ var users = require('./routes/users');
 var app = express();
 
 // Enable CORS for all routes (optional, customize as needed)
+//new change made
 app.use(cors());
 
 // view engine setup
